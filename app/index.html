@@ -1,0 +1,1236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>RequestCue</title>
+
+    <link rel="icon" href="favicon/favicon.ico" type="image/x-icon" />
+    <link href="screen.css" rel="stylesheet" media="screen" />
+
+    <!-- QR Code Library for Share View -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* --- Utility for Switching Views --- */
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ===============================
+         GUEST VIEW DESIGN SYSTEM
+         =============================== */
+      #guest-view {
+        position: relative;
+        min-height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        color: #ffffff;
+        background-color: #1a0b2e;
+        font-family: "Inter", sans-serif;
+        line-height: 1.5;
+      }
+
+      .aurora-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 0;
+        background:
+          radial-gradient(
+            circle at 10% 40%,
+            rgba(88, 86, 214, 0.3),
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 90% 10%,
+            rgba(191, 90, 242, 0.2),
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 50% 80%,
+            rgba(10, 132, 255, 0.2),
+            transparent 50%
+          );
+        filter: blur(60px);
+        animation: pulse 10s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1.05);
+          opacity: 1;
+        }
+      }
+
+      .wrapper {
+        width: 100%;
+        max-width: 520px;
+        padding: 60px 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .guest-title {
+        font-weight: 800;
+        font-size: 3rem;
+        letter-spacing: -1.5px;
+        text-align: left;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        margin-top: 0;
+        line-height: 1.1;
+      }
+
+      .guest-subtitle {
+        font-weight: 500;
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-align: left;
+        margin-top: 0;
+        margin-bottom: 2rem;
+        display: block;
+      }
+
+      .glass-panel {
+        background: rgba(45, 35, 60, 0.4);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        margin-bottom: 2rem;
+      }
+
+      .guest-input {
+        width: 100%;
+        font-size: 1.1rem;
+        padding: 1rem 1.25rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+      }
+      .guest-input:focus {
+        outline: none;
+        border-color: #bf5af2;
+        box-shadow: 0 0 0 2px rgba(191, 90, 242, 0.5);
+      }
+
+      .guest-button {
+        width: 100%;
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding: 1rem;
+        border-radius: 50px;
+        border: none;
+        cursor: pointer;
+        background: #ffffff;
+        color: #000000;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        margin-top: 1rem;
+        transition:
+          transform 0.2s,
+          opacity 0.2s;
+      }
+      .guest-button:not(:disabled):hover {
+        transform: scale(1.02);
+        opacity: 0.9;
+      }
+      .guest-button:active {
+        transform: scale(0.98);
+      }
+      .guest-button:disabled {
+        background: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.5);
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .suggestions {
+        list-style: none;
+        margin: 8px 0 0 0;
+        padding: 0;
+        background: rgba(20, 15, 30, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        max-height: 320px;
+        overflow-y: auto;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .suggestions:empty {
+        display: none;
+      }
+      .suggestion-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        color: white;
+        transition: background 0.2s;
+      }
+      .suggestion-item:last-child {
+        border-bottom: none;
+      }
+      .suggestion-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .suggestion-thumb {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #333;
+      }
+      .track-title {
+        font-weight: 600;
+        color: #fff;
+      }
+      .track-artist {
+        font-size: 0.9rem;
+        color: #d0c5e0;
+      }
+
+      .confirmation,
+      .warning-message {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 16px;
+        text-align: center;
+        font-weight: 600;
+        animation: fadeIn 0.3s;
+      }
+      .confirmation {
+        background: rgba(50, 215, 75, 0.2);
+        border: 1px solid #32d74b;
+        color: #fff;
+      }
+      .warning-message {
+        background: rgba(255, 69, 58, 0.2);
+        border: 1px solid #ff453a;
+        color: #fff;
+      }
+
+      .guest-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+      }
+      .guest-card-body {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .guest-card-heading {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        color: #d0c5e0;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+      .card-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+      .card-artist {
+        color: #d0c5e0;
+      }
+
+      .divider {
+        border: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        margin: 2.5rem 0;
+      }
+
+      .social-links,
+      .pay-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: flex-start;
+      }
+      .social-btn,
+      .pay-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        transition: 0.2s ease;
+        text-decoration: none;
+        color: white;
+        backdrop-filter: blur(5px);
+      }
+      .social-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+      }
+      .pay-btn {
+        padding: 0.8rem 1.2rem;
+        border-radius: 14px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        gap: 8px;
+      }
+      .social-btn:hover,
+      .pay-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+      }
+      .social-icon-img,
+      .pay-icon {
+        width: 24px;
+        height: 24px;
+        display: block;
+        filter: brightness(0) invert(1);
+      }
+
+      .tip-footer {
+        text-align: left;
+      }
+      .tip-footer h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+      }
+      .tip-footer p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+      }
+
+      .about-img {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        margin-top: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        padding: 20px;
+      }
+      .modal-content {
+        background: rgba(30, 25, 45, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        color: #fff;
+        padding: 2rem;
+        border-radius: 24px;
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+        position: relative;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .modal-content h2 {
+        margin-top: 1rem;
+      }
+      .close-button {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: transparent;
+        border: 0;
+        font-size: 1.5rem;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+      }
+      .close-button:hover {
+        color: #fff;
+      }
+      .modal-links.social-links {
+        justify-content: center;
+        margin-top: 1.5rem;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .app-footer {
+        text-align: center;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 4rem;
+      }
+      .app-footer a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .app-footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ========================================= -->
+    <!-- VIEW 1: DJ DASHBOARD                      -->
+    <!-- ========================================= -->
+
+    <div id="authContainer" class="overlay-container" hidden>
+      <div class="glass-card auth-card">
+        <h2 id="authTitle" class="auth-title">DJ Dashboard Login</h2>
+        <div id="authError" class="auth-error-message" hidden></div>
+        <form id="authForm" class="auth-form">
+          <div class="input-group">
+            <input
+              type="email"
+              id="emailInput"
+              placeholder=" "
+              required
+              autocomplete="email"
+            />
+            <label for="emailInput">Email Address</label>
+          </div>
+          <div class="input-group">
+            <input
+              type="password"
+              id="passwordInput"
+              placeholder=" "
+              required
+              autocomplete="current-password"
+            />
+            <label for="passwordInput">Password</label>
+          </div>
+          <button
+            type="submit"
+            id="authPrimaryBtn"
+            class="primary-btn full-width"
+          >
+            Sign In
+          </button>
+          <button id="toggleAuthBtn" type="button" class="text-btn">
+            Need an account? Sign Up
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="app-view">
+      <div class="ambient-background">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+      </div>
+
+      <div id="appShell" class="app-shell">
+        <nav
+          id="navDrawer"
+          class="nav-drawer"
+          aria-hidden="true"
+          aria-label="Main navigation"
+        >
+          <div class="nav-drawer-header">
+            <h1 class="nav-brand">RequestCue</h1>
+          </div>
+
+          <div class="nav-drawer-content" role="presentation">
+            <div class="nav-group">
+              <h3 class="nav-heading">Events</h3>
+              <ul class="nav-menu">
+                <li>
+                  <a
+                    href="#"
+                    class="nav-link is-active"
+                    data-nav-home
+                    tabindex="0"
+                    ><span class="nav-label">📅 All Dates</span></a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="nav-group">
+              <h3 class="nav-heading">Analytics</h3>
+              <ul class="nav-menu">
+                <li>
+                  <a
+                    href="#"
+                    class="nav-link"
+                    data-metrics-view="metrics-songs"
+                    tabindex="0"
+                    ><span class="nav-label">🎵 Top Songs</span></a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="nav-link"
+                    data-metrics-view="metrics-artists"
+                    tabindex="0"
+                    ><span class="nav-label">🎤 Top Artists</span></a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="nav-link"
+                    data-metrics-view="metrics-genres"
+                    tabindex="0"
+                    ><span class="nav-label">🎸 Top Genres</span></a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="nav-group">
+              <h3 class="nav-heading">Account</h3>
+              <ul class="nav-menu">
+                <li>
+                  <a href="#" class="nav-link" data-nav-settings tabindex="0"
+                    ><span class="nav-label">⚙️ Settings</span></a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="nav-link" data-nav-share tabindex="0"
+                    ><span class="nav-label">🚀 Share & Export</span></a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div
+            class="nav-footer"
+            style="
+              flex-direction: column;
+              align-items: stretch;
+              gap: 12px;
+              padding-top: 16px;
+            "
+          >
+            <span
+              id="userBadge"
+              class="user-badge-text"
+              style="text-align: center; display: block; margin-bottom: 4px"
+              >Guest</span
+            >
+            <button
+              id="signOutBtn"
+              class="glass-btn danger full-width"
+              style="justify-content: center; padding: 12px"
+            >
+              Sign Out
+            </button>
+          </div>
+        </nav>
+
+        <div id="navOverlay" class="nav-overlay" hidden></div>
+
+        <main id="mainContent" class="app-content">
+          <div id="app" class="view-home">
+            <header class="app-header glass-panel">
+              <div class="topbar">
+                <button
+                  id="menuToggle"
+                  class="hamburger-button"
+                  type="button"
+                  aria-label="Open navigation menu"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
+                </button>
+                <div class="view-heading-container">
+                  <button
+                    id="backButton"
+                    class="icon-btn"
+                    type="button"
+                    aria-label="Back"
+                    hidden
+                  >
+                    ←
+                  </button>
+                  <h2 id="viewTitle" class="view-title">All dates</h2>
+                </div>
+              </div>
+
+              <div
+                id="controlsBar"
+                class="controls-bar"
+                role="region"
+                aria-label="Filters and sorting"
+              >
+                <div class="select-wrapper">
+                  <select id="statusFilter">
+                    <option value="all">Status: All</option>
+                    <option value="unplayed" selected>Status: Unplayed</option>
+                    <option value="played">Status: Played</option>
+                  </select>
+                </div>
+                <div class="select-wrapper">
+                  <select id="sortOrder">
+                    <option value="mostRequested">Sort: Popularity</option>
+                    <option value="latestAdded">Sort: Newest</option>
+                    <option value="earliestAdded">Sort: Oldest</option>
+                    <option value="lastRequested" selected>Sort: Recent</option>
+                  </select>
+                </div>
+                <div class="select-wrapper">
+                  <select id="decadeFilter">
+                    <option value="all">Decade: All</option>
+                  </select>
+                </div>
+                <div class="select-wrapper">
+                  <select id="genreFilter">
+                    <option value="all">Genre: All</option>
+                  </select>
+                </div>
+              </div>
+            </header>
+
+            <section class="app-main">
+              <div id="feed" class="feed" role="list" aria-live="polite"></div>
+
+              <!-- SETTINGS VIEW -->
+              <div
+                id="settingsView"
+                hidden
+                style="max-width: 600px; margin: 0 auto; width: 100%"
+              >
+                <div class="glass-panel">
+                  <h2 style="margin-top: 0; margin-bottom: 24px">
+                    DJ Profile Settings
+                  </h2>
+
+                  <form id="settingsForm">
+                    <div class="input-group">
+                      <input type="text" id="djNameInput" placeholder=" " />
+                      <label for="djNameInput">DJ Name (Public)</label>
+                    </div>
+
+                    <div class="input-group" style="margin-top: 16px">
+                      <textarea
+                        id="aboutTextInput"
+                        class="input"
+                        style="
+                          background: rgba(0, 0, 0, 0.3);
+                          border: 1px solid rgba(255, 255, 255, 0.15);
+                          color: white;
+                          padding: 1rem 1.25rem;
+                          border-radius: 16px;
+                          resize: vertical;
+                          min-height: 100px;
+                        "
+                        placeholder=" "
+                      ></textarea>
+                      <label
+                        for="aboutTextInput"
+                        style="
+                          position: absolute;
+                          left: 16px;
+                          top: 16px;
+                          color: rgba(255, 255, 255, 0.45);
+                          pointer-events: none;
+                          transition: 0.2s;
+                        "
+                        >About The DJ (Bio)</label
+                      >
+                    </div>
+
+                    <h2 style="margin-top: 40px; margin-bottom: 24px">
+                      🔗 Social Links
+                    </h2>
+                    <div class="input-group">
+                      <input
+                        type="text"
+                        id="instagramInput"
+                        placeholder=" "
+                      /><label for="instagramInput">Instagram Username</label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="text"
+                        id="tiktokInput"
+                        placeholder=" "
+                      /><label for="tiktokInput">TikTok Username</label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="text"
+                        id="youtubeInput"
+                        placeholder=" "
+                      /><label for="youtubeInput">YouTube Handle (@name)</label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="text"
+                        id="soundcloudInput"
+                        placeholder=" "
+                      /><label for="soundcloudInput">SoundCloud Username</label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="text"
+                        id="mixcloudInput"
+                        placeholder=" "
+                      /><label for="mixcloudInput">Mixcloud Username</label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="text"
+                        id="patreonInput"
+                        placeholder=" "
+                      /><label for="patreonInput">Patreon Username</label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="url"
+                        id="bandcampInput"
+                        placeholder=" "
+                      /><label for="bandcampInput">Bandcamp Full URL</label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="url"
+                        id="websiteInput"
+                        placeholder=" "
+                      /><label for="websiteInput">Custom Website URL</label>
+                    </div>
+
+                    <h2 style="margin-top: 40px; margin-bottom: 24px">
+                      💰 Tip Settings
+                    </h2>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="text"
+                        id="tipHeaderInput"
+                        placeholder=" "
+                      /><label for="tipHeaderInput"
+                        >Header (e.g. Buy the DJ a drink)</label
+                      >
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="text"
+                        id="tipDescInput"
+                        placeholder=" "
+                      /><label for="tipDescInput"
+                        >Short Description (e.g. It's thirsty work...)</label
+                      >
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="url"
+                        id="applePayInput"
+                        placeholder=" "
+                      /><label for="applePayInput"
+                        >Apple Pay / Stripe Link</label
+                      >
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="url"
+                        id="googlePayInput"
+                        placeholder=" "
+                      /><label for="googlePayInput">Google Pay Link</label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px">
+                      <input
+                        type="url"
+                        id="paypalInput"
+                        placeholder=" "
+                      /><label for="paypalInput">PayPal.me Link</label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      id="saveSettingsBtn"
+                      class="primary-btn"
+                      style="margin-top: 24px"
+                    >
+                      Save Profile
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- SHARE VIEW -->
+              <div
+                id="shareView"
+                hidden
+                style="max-width: 600px; margin: 0 auto; width: 100%"
+              >
+                <div class="glass-panel" style="text-align: center">
+                  <h2 style="margin-top: 0; margin-bottom: 24px">
+                    🚀 Share Your Page
+                  </h2>
+                  <p style="color: var(--text-secondary); margin-bottom: 32px">
+                    Share this link with your audience or print the QR code for
+                    your DJ booth.
+                  </p>
+                  <div
+                    style="
+                      background: rgba(0, 0, 0, 0.3);
+                      padding: 16px;
+                      border-radius: 12px;
+                      margin-bottom: 24px;
+                      border: 1px solid var(--glass-border);
+                    "
+                  >
+                    <p
+                      style="
+                        font-size: 0.9rem;
+                        color: var(--text-tertiary);
+                        margin: 0 0 8px 0;
+                      "
+                    >
+                      Your Public Link
+                    </p>
+                    <div style="display: flex; gap: 8px">
+                      <input
+                        type="text"
+                        id="shareUrlInput"
+                        readonly
+                        style="
+                          flex: 1;
+                          background: transparent;
+                          border: none;
+                          color: var(--accent);
+                          font-weight: 600;
+                          text-align: center;
+                          outline: none;
+                        "
+                      />
+                    </div>
+                    <button
+                      id="copyShareBtn"
+                      class="glass-btn full-width"
+                      style="margin-top: 12px; justify-content: center"
+                    >
+                      Copy Link
+                    </button>
+                  </div>
+                  <hr
+                    style="
+                      border: 0;
+                      height: 1px;
+                      background: var(--glass-border);
+                      margin: 32px 0;
+                    "
+                  />
+                  <h3 style="margin-bottom: 24px">Your QR Code</h3>
+                  <div
+                    style="
+                      background: white;
+                      padding: 20px;
+                      border-radius: 20px;
+                      display: inline-block;
+                      margin-bottom: 24px;
+                    "
+                  >
+                    <div id="qrcode"></div>
+                  </div>
+                  <button id="downloadQrBtn" class="primary-btn full-width">
+                    Download QR Code (PNG)
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- Bottom Controls (Dates View Only) -->
+            <footer id="bottomControls" class="bottom-controls">
+              <button id="exportCsvBtn" class="glass-btn" type="button">
+                ⬇ Download CSV
+              </button>
+              <button id="clearAllBtn" class="glass-btn danger" type="button">
+                🗑 Clear All
+              </button>
+            </footer>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div
+      id="customDialog"
+      class="overlay-container custom-dialog-overlay"
+      hidden
+    >
+      <div class="glass-card custom-dialog">
+        <h3 id="dialogTitle">Notification</h3>
+        <p id="dialogMessage"></p>
+        <div id="dialogActions" class="dialog-actions">
+          <button id="dialogConfirm" type="button" class="primary-btn">
+            Yes
+          </button>
+          <button id="dialogCancel" type="button" class="glass-btn">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- VIEW 2: GUEST REQUEST FORM                -->
+    <!-- ========================================= -->
+    <div id="guest-view" hidden>
+      <div class="aurora-bg"></div>
+
+      <main class="wrapper">
+        <h1 class="guest-title">Request a song</h1>
+        <h2 id="djNameHeader" class="guest-subtitle" hidden>
+          Your DJ is <span id="djNameDisplay"></span>
+        </h2>
+
+        <div
+          id="guestLoading"
+          style="text-align: center; color: rgba(255, 255, 255, 0.7)"
+        >
+          <p>Connecting to DJ...</p>
+        </div>
+
+        <div id="guestContent" hidden>
+          <div class="glass-panel">
+            <form
+              id="requestForm"
+              class="form"
+              aria-describedby="confirmation"
+              novalidate
+            >
+              <label for="searchInput" class="visually-hidden"
+                >🔍 Search song</label
+              >
+              <input
+                type="search"
+                id="searchInput"
+                class="guest-input"
+                placeholder="Start typing a song…"
+                autocomplete="off"
+                required
+                aria-autocomplete="list"
+                aria-controls="suggestions"
+                aria-live="polite"
+              />
+              <ul
+                id="suggestions"
+                class="suggestions"
+                role="listbox"
+                aria-label="Song suggestions"
+              ></ul>
+
+              <input type="hidden" id="artist" name="artist" />
+              <input type="hidden" id="title" name="title" />
+              <input type="hidden" id="appleMusicUrl" name="appleMusicUrl" />
+              <input type="hidden" id="artworkUrl" name="artworkUrl" />
+              <input type="hidden" id="genre" name="genre" />
+              <input type="hidden" id="releaseYear" name="releaseYear" />
+
+              <div
+                id="selectedSongCard"
+                class="guest-card hidden"
+                role="region"
+                aria-live="polite"
+              >
+                <h2 class="guest-card-heading">Your request</h2>
+                <div class="guest-card-body">
+                  <img
+                    id="cardArtwork"
+                    src=""
+                    alt="Song artwork"
+                    class="card-thumb"
+                  />
+                  <div>
+                    <div id="cardTitle" class="card-title"></div>
+                    <div id="cardArtist" class="card-artist"></div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                id="submitButton"
+                class="guest-button"
+                disabled
+              >
+                Submit Request
+              </button>
+            </form>
+
+            <div id="confirmation" class="confirmation hidden" role="status">
+              ✅ Song request sent!
+            </div>
+            <div id="warning" class="warning-message hidden" role="alert"></div>
+          </div>
+
+          <hr class="divider" />
+
+          <!-- Tip Section -->
+          <section id="tipSection" class="tip-footer" hidden>
+            <h2><span id="tipHeader">Buy the DJ a drink</span></h2>
+            <p id="tipDesc">It's thirsty work cooking this hard.</p>
+            <div class="pay-grid" role="group" aria-label="Buy the DJ a drink">
+              <a
+                id="applePayBtn"
+                class="pay-btn"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Apple Pay"
+                hidden
+              >
+                <img
+                  class="pay-icon"
+                  src="assets/icons/apple-brands-solid-full.svg"
+                  alt=""
+                  aria-hidden="true"
+                /><span class="pay-text">Apple Pay</span>
+              </a>
+              <a
+                id="googlePayBtn"
+                class="pay-btn"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Google Pay"
+                hidden
+              >
+                <img
+                  class="pay-icon"
+                  src="assets/icons/google-brands-solid-full.svg"
+                  alt=""
+                  aria-hidden="true"
+                /><span class="pay-text">Google Pay</span>
+              </a>
+              <a
+                id="paypalBtn"
+                class="pay-btn"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="PayPal"
+                hidden
+              >
+                <img
+                  class="pay-icon"
+                  src="assets/icons/paypal-brands-solid-full.svg"
+                  alt=""
+                  aria-hidden="true"
+                /><span class="pay-text">PayPal</span>
+              </a>
+            </div>
+          </section>
+
+          <hr class="divider" id="socialDivider" hidden />
+
+          <!-- Socials Section -->
+          <section id="socialSection" class="tip-footer" hidden>
+            <h2>Follow the DJ</h2>
+            <div class="social-links" role="group" aria-label="Follow the DJ">
+              <a
+                id="guestIgBtn"
+                class="social-btn"
+                href="#"
+                target="_blank"
+                aria-label="Instagram"
+                hidden
+                ><img
+                  class="social-icon-img"
+                  src="assets/icons/instagram-brands-solid-full.svg"
+                  alt=""
+              /></a>
+              <a
+                id="guestTikTokBtn"
+                class="social-btn"
+                href="#"
+                target="_blank"
+                aria-label="TikTok"
+                hidden
+                ><img
+                  class="social-icon-img"
+                  src="assets/icons/tiktok-brands-solid-full.svg"
+                  alt=""
+              /></a>
+              <a
+                id="guestYtBtn"
+                class="social-btn"
+                href="#"
+                target="_blank"
+                aria-label="YouTube"
+                hidden
+                ><img
+                  class="social-icon-img"
+                  src="assets/icons/youtube-brands-solid-full.svg"
+                  alt=""
+              /></a>
+              <a
+                id="guestScBtn"
+                class="social-btn"
+                href="#"
+                target="_blank"
+                aria-label="SoundCloud"
+                hidden
+                ><img
+                  class="social-icon-img"
+                  src="assets/icons/soundcloud-brands-solid-full.svg"
+                  alt=""
+              /></a>
+              <a
+                id="guestMcBtn"
+                class="social-btn"
+                href="#"
+                target="_blank"
+                aria-label="Mixcloud"
+                hidden
+                ><img
+                  class="social-icon-img"
+                  src="assets/icons/mixcloud-brands-solid-full.svg"
+                  alt=""
+              /></a>
+              <a
+                id="guestPatreonBtn"
+                class="social-btn"
+                href="#"
+                target="_blank"
+                aria-label="Patreon"
+                hidden
+                ><img
+                  class="social-icon-img"
+                  src="assets/icons/patreon-brands-solid-full.svg"
+                  alt=""
+              /></a>
+              <a
+                id="guestBcBtn"
+                class="social-btn"
+                href="#"
+                target="_blank"
+                aria-label="Bandcamp"
+                hidden
+                ><img
+                  class="social-icon-img"
+                  src="assets/icons/bandcamp-brands-solid-full.svg"
+                  alt=""
+              /></a>
+              <a
+                id="guestWebBtn"
+                class="social-btn"
+                href="#"
+                target="_blank"
+                aria-label="Website"
+                hidden
+                ><img
+                  class="social-icon-img"
+                  src="assets/icons/globe-solid.svg"
+                  alt=""
+              /></a>
+            </div>
+          </section>
+
+          <!-- About Section -->
+          <section id="aboutSection" class="about-section" hidden>
+            <hr class="divider" />
+            <div class="glass-panel">
+              <h2>👋 About the DJ</h2>
+              <p class="about-text" id="aboutTextDisplay"></p>
+            </div>
+          </section>
+
+          <footer class="app-footer">
+            <p>Powered by RequestCue</p>
+          </footer>
+        </div>
+      </main>
+
+      <!-- Social Modal -->
+      <div id="socialModal" class="modal hidden" aria-hidden="true">
+        <div class="modal-content">
+          <button
+            type="button"
+            class="close-button"
+            id="socialCloseBtn"
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <h2>Thanks for all your requests!</h2>
+          <p>Enjoying the music? Follow to stay up to date!</p>
+          <div
+            class="modal-links social-links"
+            id="modalSocialLinks"
+            role="group"
+            aria-label="Follow the DJ"
+          >
+            <!-- Cloned from main social links via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN SCRIPT (Entry Point) -->
+    <script type="module" src="scripts.js"></script>
+  </body>
+</html>

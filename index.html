@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>RequestCue - The Ultimate DJ Request System</title>
+  <meta name="description" content="Take control of your DJ booth. RequestCue is a real-time song request, tipping, and queue management system for professional DJs.">
+  <link rel="icon" href="app/favicon/favicon.ico" type="image/x-icon" />
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="marketing.css">
+</head>
+<body>
+  <div class="aurora-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="brand">RequestCue</div>
+      <div class="nav-links">
+        <a href="app/index.html" class="btn-secondary">Log In</a>
+        <a href="app/index.html" class="btn-primary">Sign Up Free</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <div class="badge fade-in-up">Now in Public Beta</div>
+        <h1 class="hero-title fade-in-up delay-1">The Ultimate DJ Request System</h1>
+        <p class="hero-subtitle fade-in-up delay-2">Ditch the napkins. Manage song requests, collect tips, and grow your audience seamlessly from your phone or tablet.</p>
+        <div class="hero-actions fade-in-up delay-3">
+          <a href="app/index.html" class="btn-primary btn-large">Get Started Free</a>
+          <a href="#features" class="btn-glass btn-large">See How It Works</a>
+        </div>
+      </div>
+      <div class="hero-visual fade-in-up delay-4">
+        <div class="glass-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dot red"></div>
+            <div class="mockup-dot yellow"></div>
+            <div class="mockup-dot green"></div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-track">
+              <div class="mockup-art"></div>
+              <div class="mockup-info">
+                <div class="mockup-title">Losing It</div>
+                <div class="mockup-artist">FISHER</div>
+              </div>
+              <div class="mockup-badge">5 requests</div>
+            </div>
+            <div class="mockup-track">
+              <div class="mockup-art"></div>
+              <div class="mockup-info">
+                <div class="mockup-title">Baddadan</div>
+                <div class="mockup-artist">Chase & Status</div>
+              </div>
+              <div class="mockup-badge">3 requests</div>
+            </div>
+            <div class="mockup-track">
+              <div class="mockup-art"></div>
+              <div class="mockup-info">
+                <div class="mockup-title">Rumble</div>
+                <div class="mockup-artist">Skrillex, Fred again..</div>
+              </div>
+              <div class="mockup-badge">2 requests</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features">
+      <div class="section-header fade-in-scroll">
+        <h2>Designed for the Modern Booth</h2>
+        <p>Everything you need to engage your crowd, built directly into one simple link.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card glass-panel fade-in-scroll">
+          <div class="feature-icon">🚀</div>
+          <h3>QR Code Magic</h3>
+          <p>Print or display your unique QR code. Guests scan it, search the iTunes database, and submit requests instantly without downloading an app.</p>
+        </div>
+        <div class="feature-card glass-panel fade-in-scroll">
+          <div class="feature-icon">💰</div>
+          <h3>Collect Tips</h3>
+          <p>Integrate Apple Pay, Google Pay, PayPal, or CashApp. Let your fans show their appreciation directly from the request screen.</p>
+        </div>
+        <div class="feature-card glass-panel fade-in-scroll">
+          <div class="feature-icon">📊</div>
+          <h3>Real-time Analytics</h3>
+          <p>See what your crowd actually wants. Your dashboard instantly groups identical requests, filtering out the noise so you know the hottest tracks.</p>
+        </div>
+        <div class="feature-card glass-panel fade-in-scroll">
+          <div class="feature-icon">🎨</div>
+          <h3>Custom Profiles</h3>
+          <p>Add your DJ bio, link all your socials (Instagram, TikTok, SoundCloud), and build your brand while spinning the tracks.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section fade-in-scroll">
+      <div class="glass-panel cta-panel">
+        <h2>Ready to take control?</h2>
+        <p>Join the next generation of DJs managing their floor perfectly.</p>
+        <a href="app/index.html" class="btn-primary btn-large cta-btn">Create Your Free Account</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="brand">RequestCue</div>
+      <p class="footer-copy">&copy; 2026 RequestCue. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="app/index.html">Login</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Simple intersection observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in-scroll').forEach((el) => {
+      observer.observe(el);
+    });
+    
+    // Trigger initial load animations
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.fade-in-up').forEach(el => el.classList.add('visible'));
+    });
+  </script>
+</body>
+</html>
